@@ -37,4 +37,9 @@ urlpatterns = [
     path('syslog_delete/<pk>/', views.systemadmin_log_delete, name="systemadmin_log_delete"),
     path('sys_reset_pwd/', views.systemadmin_reset_pwd, name="systemadmin_reset_pwd"),
     path('reset_pwd/', views.user_reset_pwd, name="user_reset_pwd"),
+    path('dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+path('user/dashboard/', views.user_dashboard_view, name='user_dashboard'),
+
+
+
 ]
