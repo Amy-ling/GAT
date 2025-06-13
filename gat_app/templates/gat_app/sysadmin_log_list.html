@@ -1,0 +1,58 @@
+{% extends "base_admin.html" %}
+
+{% load static %}
+
+{% block body_content %}
+
+    <h2>Log Book History</h2>
+    <br/>
+
+    <div class="container w-60" style="min-width:300px; max-width: 550px;">
+        <form action="/syslog_list/" method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="user_phone" class="form-label">Register Phone Number:</label>
+                <input type="text" class="form-control" name="user_phone" id="user_phone" aria-describedby="user_phoneHelp">
+                <div id="user_phoneHelp" class="form-text">Please input registered phone number (** 8 digit)</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <div class="container w-85 p-2" style="min-width:500px; max-width: 800px;">
+        <table class="table table-striped">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">User Name</th>
+                <th scope="col">Log Action</th>
+                <th scope="col">Log Result</th>
+                <th scope="col">Log Time</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for log_rec in logs %}
+
+                {% if not log_rec.is_done %}
+
+                    <tr>
+                        <td>{{ log_rec.id }}</td>
+                        <td>{{ log_rec.log_user.username }}</td>
+                        <td>{{ log_rec.log_action }}</td>
+                        <td>{{ log_rec.log_result }}</td>
+                        <td>{{ log_rec.log_date }}</td>
+                        <td><a class="btn btn-primary" href="{% url "systemadmin_log_delete" log_rec.id%}" onclick="return confirm('Are you sure?')">Delete</a></td>
+                    </tr>
+
+                {% endif %}
+
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}

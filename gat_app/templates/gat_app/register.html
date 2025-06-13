@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block body_content %}
+    <div class="container w-60" style="min-width:300px; max-width: 550px;">
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend><h2>Join Give & Take Today</h2></legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div>
+                <button type="submit">Sign Up</button>
+            </div>
+        </form>
+        <div>
+            <small>
+                Already Have An Account? <a href="login">Log In</a>
+            </small>
+        </div>
+    </div>
+
+{% endblock %}
