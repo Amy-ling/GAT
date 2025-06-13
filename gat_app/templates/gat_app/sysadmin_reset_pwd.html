@@ -1,0 +1,27 @@
+{% extends "base_admin.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block body_content %}
+
+    <h2>Reset User Password</h2>
+    <br/>
+    <div class="container w-50" style="min-width:300px; max-width: 550px;">
+        <form action="/reset_pwd/" method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="user_phone" class="form-label">Register Phone Number:</label>
+                <input type="number" class="form-control" name="user_phone" id="user_phone" min="20000000" max="99999999" aria-describedby="user_phoneHelp">
+                <div id="user_phoneHelp" class="form-text">Please input registered phone number (** 8 digit)</div>
+            </div>
+            <div class="mb-3">
+                <label for="new_pwd" class="form-label">Password:</label>
+                <input type="password" class="form-control" minlength="3" maxlength="10" name="new_pwd" id="new_pwd">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+{% endblock %}
