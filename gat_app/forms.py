@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.db import transaction
-from .models import UserProfile
+from .models import UserProfile, Item
 import random
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
@@ -88,3 +88,15 @@ class UserProfileUpdateForm(forms.ModelForm):
         # Customize field labels or help text if you want
         self.fields['name'].label = "Display Name"
         self.fields['name'].help_text = "This name will be visible to other users."
+
+class ItemForm(forms.ModelForm):
+    item_image = forms.ImageField(required=False, label="Upload Image")
+
+    class Meta:
+        model = Item
+        fields = ['item_name', 'item_type', 'description', 'item_image']
+        labels = {
+            'item_name': '物品名稱',
+            'item_type': '物品類型',
+            'description': '物品描述',
+        }

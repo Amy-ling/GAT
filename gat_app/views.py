@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import UserRegisterForm, UserProfileUpdateForm, UserLoginForm
+from .forms import UserRegisterForm, UserProfileUpdateForm, UserLoginForm, ItemForm
 from django.contrib.auth.models import User
-from .models import LogBook
+from .models import LogBook, Item, ItemImage
 from django.contrib.auth import login
 from django.http import HttpResponse
 
@@ -18,10 +18,18 @@ def gat_index(request):
 def gat_user_index(request):
     return render(request, "gat_app/user_main.html")
 
+# gat_app/views.py
+
 @login_required
 def systemadmin_index(request):
-    return render(request, "gat_app/sysadmin_main.html")
+    # 加入權限檢查：確保只有 is_admin=True 的使用者才能訪問
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
+        messages.error(request, "You do not have permission to view this page.")
+        # 如果權限不符，可以將他們導向到一般使用者的主頁或個人資料頁
+        return redirect('gat_user_index')
 
+    # 如果權限正確，才渲染管理者主頁
+    return render(request, "gat_app/sysadmin_main.html")
 def register_view(request):
     if request.method == 'POST':
         # Use your custom form
@@ -109,23 +117,60 @@ def login_view(request):
 
             messages.success(request, f'Welcome back, {user.profile.name}!')
 
+            # gat_app/views.py -> 於 login_view 函數中
+
             if hasattr(user, 'profile') and user.profile.is_admin:
-                return redirect('admin_dashboard')
+                # 管理者登入後，重導向到 systemadmin_index 對應的 URL
+                return redirect('systemadmin_index')
             else:
-                return redirect('profile')
+                # 一般使用者登入後，重導向到 gat_user_index 對應的 URL
+                return redirect('gat_user_index')
     else:
         form = UserLoginForm()
 
     return render(request, 'gat_app/login.html', {'form': form})
 
 @login_required
-def admin_dashboard_view(request):
-    if not hasattr(request.user, 'profile') or not request.user.profile.is_admin:
-        messages.error(request, "You do not have permission to view this page.")
-        return redirect('profile')
-    return render(request, 'gat_app/sysadmin_main.html')
+def give_item_view(request):
+    if request.method == 'POST':
+        # 處理圖片上傳需要同時傳入 request.POST 和 request.FILES
+        form = ItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            # 先不儲存到資料庫，因為我們需要先設定 give_user
+            item = form.save(commit=False)
+            # 將 give_user 設定為當前登入的使用者
+            item.give_user = request.user
+            # 現在可以儲存 Item 物件了
+            item.save()
+
+            # 處理圖片上傳
+            image = form.cleaned_data.get('item_image')
+            if image:
+                ItemImage.objects.create(item_id=item, item_image=image)
+
+            messages.success(request, '你的物品已成功發佈！')
+            return redirect('my_items') # 成功後重導向到首頁
+    else:
+        form = ItemForm()
+
+    return render(request, 'gat_app/give_item.html', {'form': form})
+
 
 @login_required
-def user_dashboard_view(request):
-    context = {}
-    return render(request, 'gat_app/user_main.html', context)
+def placeholder_view(request):
+    """一個通用的佔位視圖，用於尚未開發的功能。"""
+    return HttpResponse("<h1>This page is under construction.</h1><a href='javascript:history.back()'>Go Back</a>")
+
+@login_required
+def my_items_view(request):
+    items = Item.objects.filter(give_user=request.user).order_by('-give_date')
+
+    context = {
+        'items': items
+    }
+    return render(request, 'gat_app/my_items.html', context)
+@login_required
+def item_history_view(request):
+    return HttpResponse("<h1>History Page (Under Construction)</h1>")
+
+# 'Take Item' 連結應該連到首頁，所以不需要為它建立獨立的 view

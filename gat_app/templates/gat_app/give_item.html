@@ -1,0 +1,19 @@
+{% extends "base_user.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Give an Item - {{ block.super }}{% endblock %}
+
+{% block body_content %}
+    <h2>Give an Item Away</h2>
+    <p>Fill out the form below to list your item.</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            {{ form|crispy }}
+        </fieldset>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Post Item</button>
+        </div>
+    </form>
+{% endblock %}
