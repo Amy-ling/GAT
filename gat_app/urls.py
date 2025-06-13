@@ -31,14 +31,16 @@ urlpatterns = [
         template_name='gat_app/password_change_done.html'
     ), name='password_change_done'),
 
-    path('user/', views.gat_user_index, name="gat_user_index"),
+    path('user/home/', views.gat_user_index, name="gat_user_index"),
     path('sys_admin/', views.systemadmin_index, name="systemadmin_index"),
     path('syslog_list/', views.sysadmin_log_list, name="sysadmin_log_list"),
     path('syslog_delete/<pk>/', views.systemadmin_log_delete, name="systemadmin_log_delete"),
     path('sys_reset_pwd/', views.systemadmin_reset_pwd, name="systemadmin_reset_pwd"),
-    path('reset_pwd/', views.user_reset_pwd, name="user_reset_pwd"),
-    path('dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
-path('user/dashboard/', views.user_dashboard_view, name='user_dashboard'),
+    path('user/reset_pwd/', views.user_reset_pwd, name="user_reset_pwd"),
+    path('item/give/', views.give_item_view, name='give_item'),
+    path('user/my-items/', views.my_items_view, name='my_items'),
+    path('user/history/', views.item_history_view, name='item_history'),
+    path('sysadmin/password-management/', views.placeholder_view, name='password_management'),
 
 
 
