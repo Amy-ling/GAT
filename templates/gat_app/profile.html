@@ -1,0 +1,57 @@
+{% extends "base_user.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block title %}My Profile - {{ block.super }}{% endblock %}
+
+{% block body_content %}
+    <script>
+        function validateForm() {
+            var x = document.forms["resetForm"]["user_phone"].value;
+            var y = document.forms["resetForm"]["new_pwd"].value;
+            if (x == "" || y == "" | x == null | y == "") {
+                alert("Please fill in all fields of data");
+                return false;
+            }
+        }
+    </script>
+    {% if messages %}
+         {% for message in messages %}
+             {% if message.tags %}
+                 <script>alert("{{ message }}");</script>
+             {% endif %}
+         {% endfor %}
+     {% endif %}
+    <h2>My Profile</h2>
+
+    <div class="container w-60" style="min-width:300px; max-width: 550px;">
+        <p><strong>Username (reference ID):</strong> {{ user.username }}</p>
+        <p><strong>Display Name:</strong> {{ user.profile.name }}</p>
+        <p><strong>Phone Number:</strong> {{ user.profile.phone }}</p>
+    </div>
+
+    <hr>
+
+    <div class="container w-80 justify-content-center" style="min-width:300px; max-width: 550px;">
+        <h3>Update Your Profile</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Edit Details</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <hr>
+
+    <div class="container w-80 justify-content-center" style="min-width:200px; max-width: 200px;">
+        <h3>Security</h3>
+        <form action="{% url 'password_change' %}" method="get">
+            {% csrf_token %}
+           <button type="submit" class="btn btn-primary">Change Password</button>
+        </form>
+    </div>
+{% endblock %}
