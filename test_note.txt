@@ -1,0 +1,32 @@
+TEST USERS
+==========
+phone		password	name
+---------------------------------------------
+99999999	admin		system admin
+22220000	147258		peter pang
+33331111	147258		john wu
+
+
+2025-06-16
+----------
+1) after user change name in profile, it must be logout/login to update display
+   - request.session['uname'] = profile.name
+2) user A give item, then user B take it
+   - from user [User83463]  <- name not update
+3) user A history, show "given history" with taken by another user
+   - it should be show taken user name with phone for contact
+
+
+2025-06-17
+----------
+1) after user registration, popup message "account created for none!..."
+   - change to "Welcome to Give & Take..."
+2) user A give item, can be view in "available items"
+3) user > history > available item
+   - change to "Given Items (available)" & "Given Items¡]taken)"
+   - adjust div size
+4) take item > take an item > "here is a list of items..."
+   - delete text; "here is a list of items..."
+   - adjust div size
+5) take item > take this item > given by: User43289??
+   - fixed
