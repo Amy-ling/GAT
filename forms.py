@@ -99,14 +99,14 @@ class ItemForm(forms.ModelForm):
     # Use the new custom MultipleFileField for the item images
     item_image = MultipleFileField(
         required=False,
-        label="上傳圖片 (可選擇多張)"
+        label="Upload Image(s)"
     )
 
     class Meta:
         model = Item
         fields = ['item_name', 'item_type', 'description']
         labels = {
-            'item_name': '物品名稱',
-            'item_type': '物品類型',
-            'description': '物品描述',
+            'item_name': 'Item Name',
+            'item_type': 'Item Type',
+            'description': 'Description',
         }

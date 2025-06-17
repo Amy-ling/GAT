@@ -14,13 +14,7 @@
             }
         }
     </script>
-    {% if messages %}
-         {% for message in messages %}
-             {% if message.tags %}
-                 <script>alert("{{ message }}");</script>
-             {% endif %}
-         {% endfor %}
-     {% endif %}
+
     <h2>My Profile</h2>
 
     <div class="container w-60" style="min-width:300px; max-width: 550px;">

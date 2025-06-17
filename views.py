@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import HttpResponse
@@ -24,7 +25,7 @@ def register_view(request):
             # The custom save() method now handles everything
             form.save()
             username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}! You can now log in.')
+            messages.success(request, f'Welcome to Give & Take! You can now log in.')
             # Make sure 'login' is the name of your login URL pattern
             return redirect('login')
     else:
@@ -58,27 +59,170 @@ def gat_portal(request):
 ##############################################
 @login_required
 def profile_view(request):
-    # We get the user's profile through the related_name "profile" we set in the model
+    profile = request.user.profile
     profile = request.user.profile
 
     if request.method == 'POST':
-        # Pass the instance to the form to update the existing profile
         form = UserProfileUpdateForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
+            request.session['uname'] = profile.name
             messages.success(request, 'Your profile has been updated successfully!')
-            logbook_save(request.session['uid'], 'user profile update', 'success')
-            return redirect('profile') # Redirect back to the profile page
+            logbook_save(request.user.id, 'user profile update', 'success')
+            return redirect('profile')
         else:
             logbook_save(request.user.id, 'user profile update', 'failure')
     else:
-        # On a GET request, pre-populate the form with the user's current profile data
         form = UserProfileUpdateForm(instance=profile)
 
     context = {
         'form': form
     }
     return render(request, 'gat_app/profile.html', context)
+
+
+##############################################
+#block of give & take item
+##############################################
+@login_required
+def give_item_view(request):
+    if request.method == 'POST':
+        form = ItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.give_user = request.user
+            item.save()
+
+            images = request.FILES.getlist('item_image')
+            for image in images:
+                ItemImage.objects.create(item_id=item, item_image=image)
+            logbook_save(request.user.id, f'Item given [ID:{item.id}]', 'success')
+            messages.success(request, 'Your item has been successfully posted!')
+        else:
+            logbook_save(request.user.id, f'Item give', 'failure')
+        return redirect('user_history')
+    else:
+        form = ItemForm()
+
+    return render(request, 'gat_app/give_item.html', {'form': form})
+
+@login_required
+def user_history_view(request):
+    # Tab 1: Items the user has posted that are still available
+    available_items = Item.objects.filter(
+        give_user=request.user,
+        item_state='available'
+    ).order_by('-give_date')
+
+    # Tab 2: Items the user posted that have been taken by others
+    given_and_taken_items = Item.objects.filter(
+        give_user=request.user,
+        item_state='taken'
+    ).order_by('-give_date')
+
+    # Tab 3: Items the user has taken from other people
+    my_taken_items = ItemTaken.objects.filter(take_user=request.user).order_by('-take_date')
+
+    context = {
+        'available_items': available_items,
+        'given_and_taken_items': given_and_taken_items,
+        'my_taken_items': my_taken_items,
+    }
+    return render(request, 'gat_app/my_history.html', context)
+
+@login_required
+def edit_item_view(request, pk):
+    # Get the specific item by its primary key (pk), or show a 404 error if not found
+    # Also ensure the item belongs to the logged-in user to prevent unauthorized editing
+    item = get_object_or_404(Item, pk=pk, give_user=request.user)
+
+    if request.method == 'POST':
+        # Pass the instance to the form to update the existing item
+        form = ItemForm(request.POST, request.FILES, instance=item)
+        if form.is_valid():
+            form.save()  # Save the changes to the item
+
+            # Handle updated images (optional: you can add logic here to delete old images)
+            images = request.FILES.getlist('item_image')
+            if images:
+                # If new images are uploaded, you might want to clear old ones first
+                ItemImage.objects.filter(item_id=item).delete()
+                for image in images:
+                    ItemImage.objects.create(item_id=item, item_image=image)
+
+            messages.success(request, 'Your item has been updated successfully!')
+            logbook_save(request.user.id, f'Item updated [ID:{pk}]', 'success')
+        return redirect('user_history')
+    else:
+        # On a GET request, pre-populate the form with the item's current data
+        form = ItemForm(instance=item)
+
+    context = {
+        'form': form,
+        'item': item
+    }
+    return render(request, 'gat_app/edit_item.html', context)
+
+@login_required
+def delete_item_view(request, pk):
+    item = get_object_or_404(Item, pk=pk, give_user=request.user)
+
+    if request.method == 'POST':
+        item_name = item.item_name
+        item.delete()
+        messages.success(request, f'The item "{item_name}" has been successfully taken back.')
+        logbook_save(request.user.id, f'Item deleted [ID:{pk}]', 'success')
+        return redirect('user_history')
+
+    context = {
+        'item': item
+    }
+    return render(request, 'gat_app/delete_item_confirm.html', context)
+
+@login_required
+def take_item_view(request):
+    # Get all items that are 'available' and not given by the current user
+    available_items = Item.objects.filter(
+        item_state='available'
+    ).exclude(
+        give_user=request.user
+    ).order_by('-give_date')
+
+    context = {
+        'items': available_items
+    }
+    return render(request, 'gat_app/take_item.html', context)
+
+@login_required
+def confirm_take_item_view(request, pk):
+    # Get the item the user wants to take
+    item_to_take = get_object_or_404(Item, pk=pk, item_state='available')
+
+    # Ensure users cannot take their own items
+    if item_to_take.give_user == request.user:
+        messages.error(request, "You cannot take your own item.")
+        return redirect('take_item')
+
+    if request.method == 'POST':
+        # Update the item's state
+        item_to_take.item_state = 'taken'
+        item_to_take.save(update_fields=['item_state'])
+
+        # Create a record in the ItemTaken table
+        ItemTaken.objects.create(item_id=item_to_take, take_user=request.user)
+
+        # Log the action
+        logbook_save(request.user.id, f'Item taken [ID:{pk}]', 'success')
+        messages.success(request, f'You have successfully taken the item "{item_to_take.item_name}".')
+
+        # Redirect to their history page to see the newly taken item
+        return redirect('user_history')
+
+    # For a GET request, show a confirmation page
+    context = {
+        'item': item_to_take
+    }
+    return render(request, 'gat_app/confirm_take_item.html', context)
 
 
 ##############################################
@@ -138,110 +282,3 @@ def user_reset_pwd(request):
             return render(request, "gat_app/sysadmin_reset_pwd.html")
     else:
         return render(request, "gat_app/sysadmin_reset_pwd.html")
-
-
-##############################################
-#block of give item
-##############################################
-@login_required
-def give_item_view(request):
-    if request.method == 'POST':
-        form = ItemForm(request.POST, request.FILES)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.give_user = request.user
-            item.save()
-
-            images = request.FILES.getlist('item_image')
-            for image in images:
-                ItemImage.objects.create(item_id=item, item_image=image)
-
-            messages.success(request, 'Your item has been successfully posted!')
-            return redirect('user_history')
-    else:
-        form = ItemForm()
-
-    return render(request, 'gat_app/give_item.html', {'form': form})
-
-@login_required
-def take_item_view(request):
-    return render(request, 'gat_app/take_item.html')
-
-
-# REPLACE the old user_history_view with this new, combined version
-@login_required
-def user_history_view(request):
-    # Tab 1: Items the user has posted that are still available
-    available_items = Item.objects.filter(
-        give_user=request.user,
-        item_state='available'
-    ).order_by('-give_date')
-
-    # Tab 2: Items the user posted that have been taken by others
-    given_and_taken_items = Item.objects.filter(
-        give_user=request.user,
-        item_state='taken'
-    ).order_by('-give_date')
-
-    # Tab 3: Items the user has taken from other people
-    my_taken_items = ItemTaken.objects.filter(take_user=request.user).order_by('-take_date')
-
-    context = {
-        'available_items': available_items,
-        'given_and_taken_items': given_and_taken_items,
-        'my_taken_items': my_taken_items,
-    }
-    return render(request, 'gat_app/my_history.html', context)
-
-@login_required
-def edit_item_view(request, pk):
-    # Get the specific item by its primary key (pk), or show a 404 error if not found
-    # Also ensure the item belongs to the logged-in user to prevent unauthorized editing
-    item = get_object_or_404(Item, pk=pk, give_user=request.user)
-
-    if request.method == 'POST':
-        # Pass the instance to the form to update the existing item
-        form = ItemForm(request.POST, request.FILES, instance=item)
-        if form.is_valid():
-            form.save()  # Save the changes to the item
-
-            # Handle updated images (optional: you can add logic here to delete old images)
-            images = request.FILES.getlist('item_image')
-            if images:
-                # If new images are uploaded, you might want to clear old ones first
-                ItemImage.objects.filter(item_id=item).delete()
-                for image in images:
-                    ItemImage.objects.create(item_id=item, item_image=image)
-
-            messages.success(request, 'Your item has been updated successfully!')
-            logbook_save(request.user.id, f'Item update [ID:{pk}]', 'success')
-            return redirect('my_items')
-        else:
-            logbook_save(request.user.id, f'Item update [ID:{pk}]', 'failure')
-
-    else:
-        # On a GET request, pre-populate the form with the item's current data
-        form = ItemForm(instance=item)
-
-    context = {
-        'form': form,
-        'item': item
-    }
-    return render(request, 'gat_app/edit_item.html', context)
-
-
-@login_required
-def delete_item_view(request, pk):
-    item = get_object_or_404(Item, pk=pk, give_user=request.user)
-
-    if request.method == 'POST':
-        item_name = item.item_name
-        item.delete()
-        messages.success(request, f'The item "{item_name}" has been successfully taken back.')
-        logbook_save(request.user.id, f'Item delete [Name:{item_name}]', 'success')
-        return redirect('my_items')
-
-    context = {
-        'item': item
-    }
-    return render(request, 'gat_app/delete_item_confirm.html', context)

@@ -5,18 +5,20 @@
     <h2>My History & Activity</h2>
     <br/>
 
+<div class="container w-85 p-2" style="min-width:500px; max-width: 800px;">
     {# Tab Navigation #}
     <ul class="nav nav-fill nav-tabs" id="myHistoryTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="available-tab" data-bs-toggle="tab" href="#available-panel" role="tab" aria-controls="available-panel" aria-selected="true">Available Items</a>
+            <a class="nav-link active" id="available-tab" data-bs-toggle="tab" href="#available-panel" role="tab" aria-controls="available-panel" aria-selected="true"><strong>Given Items (Available)</strong></a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="given-history-tab" data-bs-toggle="tab" href="#given-history-panel" role="tab" aria-controls="given-history-panel" aria-selected="false">Given History</a>
+            <a class="nav-link" id="given-history-tab" data-bs-toggle="tab" href="#given-history-panel" role="tab" aria-controls="given-history-panel" aria-selected="false"><strong>Given Items (Taken)</strong></a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="pickups-tab" data-bs-toggle="tab" href="#pickups-panel" role="tab" aria-controls="pickups-panel" aria-selected="false">My Pickups</a>
+            <a class="nav-link" id="pickups-tab" data-bs-toggle="tab" href="#pickups-panel" role="tab" aria-controls="pickups-panel" aria-selected="false"><strong>My Pickups</strong></a>
         </li>
     </ul>
+
 
     {# Tab Content #}
     <div class="tab-content pt-4" id="myHistoryTabContent">
@@ -48,7 +50,7 @@
                 </div>
             {% else %}
                 <p>You have no available items.</p>
-                <a href="{% url 'give_item' %}" class="btn btn-primary">Give Your First Item!</a>
+                <a href="{% url 'give_item' %}" class="btn btn-primary">Give Your pre-loved Item!</a>
             {% endif %}
         </div>
 
@@ -74,8 +76,12 @@
                     {% for taken_record in my_taken_items %}
                          <div class="list-group-item">
                             <h5 class="mb-1">{{ taken_record.item_id.item_name }}</h5>
-                            <p class="mb-1">You picked this up from user <strong>{{ taken_record.item_id.give_user.username }}</strong>.</p>
+                            <br/>
+                             <p class="mb-1">You picked this up from user: <strong>{{ taken_record.item_id.give_user.profile.name }}</strong>.</p>
+                              {# --- THIS LINE IS NOW CORRECTED --- #}
+                              <p> Please contact the giver by phone number: <strong>{{ taken_record.item_id.give_user.profile.phone }}</strong>.</p>
                             <small>Picked up on: {{ taken_record.take_date|date:"Y-m-d H:i" }}</small>
+
                          </div>
                     {% endfor %}
                  </div>
@@ -84,4 +90,5 @@
             {% endif %}
         </div>
     </div>
+</div>
 {% endblock %}

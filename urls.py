@@ -38,6 +38,7 @@ urlpatterns = [
     path('item/give/', views.give_item_view, name='give_item'),
     path('item/take/', views.take_item_view, name='take_item'),
     path('user/history/', views.user_history_view, name='user_history'),
+    path('item/<int:pk>/confirm_take/', views.confirm_take_item_view, name='confirm_take_item'),
     path('item/<int:pk>/edit/', views.edit_item_view, name='edit_item'),
     path('item/<int:pk>/delete/', views.delete_item_view, name='delete_item'),
     path('item/take/', views.take_item_view, name='take_item'),

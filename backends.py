@@ -20,7 +20,7 @@ class PhoneBackend(ModelBackend):
             # Check if the provided password is correct for this user.
             if user.check_password(password):
                 return user # Return the user object if authentication is successful.
-        except UserProfile.DoesNotExist:
+        except:
             # If no profile is found with that phone number, do nothing and let other backends try.
             return None
 
