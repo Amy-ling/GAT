@@ -230,21 +230,39 @@ def confirm_take_item_view(request, pk):
 ##############################################
 @login_required
 def sysadmin_log_list(request):
-    #logs = LogBook.objects.all().order_by('-log_date')
+    context = {}
+
     if request.method == 'POST':
-        try:
-            up = UserProfile.objects.get(phone=request.POST['user_phone'])
-            logs = LogBook.objects.filter(log_user_id=up.id).order_by('-log_date')
-            context = {
-                'logs': logs,
-                'user_name': up.name,
-                'user_phone': up.phone,
-            }
-            return render(request, "gat_app/sysadmin_log_list.html", context)
-        except:
-            return render(request, "gat_app/sysadmin_log_list.html")
+        # 處理電話號碼搜尋功能
+        search_phone = request.POST.get('user_phone', '').strip()
+
+        if not search_phone:
+            # 如果搜尋框是空的，就顯示所有日誌
+            logs = LogBook.objects.all().order_by('-log_date')
+            context['logs'] = logs
+        else:
+            try:
+                profile = UserProfile.objects.get(phone=search_phone)
+                logs = LogBook.objects.filter(log_user_id=profile.user.id).order_by('-log_date')
+
+                context = {
+                    'logs': logs,
+                    'user_name': profile.name,
+                    'user_phone': profile.phone,
+                    'is_filtered': True,  # 告訴範本現在是篩選模式
+                }
+            except UserProfile.DoesNotExist:
+                messages.error(request, f"User with phone number '{search_phone}' not found.")
+                # 如果找不到用戶，就再次顯示所有日誌
+                logs = LogBook.objects.all().order_by('-log_date')
+                context['logs'] = logs
+
     else:
-        return render(request, "gat_app/sysadmin_log_list.html")
+        # 處理 GET 請求 (也就是第一次載入頁面時)，預設顯示所有日誌
+        logs = LogBook.objects.all().order_by('-log_date')
+        context['logs'] = logs
+
+    return render(request, "gat_app/sysadmin_log_list.html", context)
 
 @login_required
 def systemadmin_log_delete(request, pk):

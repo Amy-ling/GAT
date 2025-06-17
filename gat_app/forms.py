@@ -3,9 +3,11 @@
 from django import forms
 from django.db import transaction
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from .models import UserProfile, Item
 import random
 from django.contrib.auth.forms import AuthenticationForm
+
 
 class MultipleFileInput(forms.ClearableFileInput):
     """
@@ -32,7 +34,6 @@ class MultipleFileField(forms.FileField):
 
 
 class UserRegisterForm(forms.Form):
-    # ... (rest of the form is unchanged) ...
     phone = forms.IntegerField(
         label='Phone Number',
         help_text='Your 8-digit phone number. This will be your login ID in the future.'
@@ -40,7 +41,7 @@ class UserRegisterForm(forms.Form):
     password = forms.CharField(
         label='Password',
         widget=forms.PasswordInput,
-        help_text='Your password must contain at least 8 characters.'
+        help_text=' Your password can’t be too similar to your other personal information.<br> Your password must contain at least 8 characters.<br> Your password can’t be a commonly used password.<br> Your password can’t be entirely numeric.'
     )
     password2 = forms.CharField(
         label='Confirm Password',
@@ -55,9 +56,19 @@ class UserRegisterForm(forms.Form):
 
     def clean_password2(self):
         cd = self.cleaned_data
-        if cd.get('password') and cd.get('password2') and cd['password'] != cd['password2']:
+        password = cd.get('password')
+        password2 = cd.get('password2')
+
+        if password and password2 and password != password2:
             raise forms.ValidationError("Passwords don't match.")
-        return cd.get('password2')
+
+        if password:
+            try:
+                validate_password(password)
+            except forms.ValidationError as e:
+                self.add_error('password', e)
+
+        return password2
 
     @transaction.atomic
     def save(self):
@@ -65,26 +76,36 @@ class UserRegisterForm(forms.Form):
             random_username = f"User{random.randint(10000, 99999)}"
             if not User.objects.filter(username=random_username).exists():
                 break
+
         user = User.objects.create_user(
             username=random_username,
             password=self.cleaned_data.get('password')
         )
-        profile = UserProfile.objects.create(
+
+        UserProfile.objects.create(
             user=user,
             phone=self.cleaned_data.get('phone'),
-            name=random_username
+            name=random_username,
+            is_admin=False
         )
         return user
 
 class UserLoginForm(AuthenticationForm):
-    # ... (unchanged) ...
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].label = 'Phone Number'
-        self.fields['username'].help_text = 'Enter the 8-digit phone number you registered with.'
+    username = forms.CharField(
+        label='Phone Number',
+        help_text='Please enter your 8-digit phone number.',
+        min_length=8,
+        max_length=8,
+        widget=forms.TextInput(attrs={'type': 'number', 'placeholder': '8-digit phone number'})
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not username.isdigit():
+            raise forms.ValidationError("Phone number must be digits.")
+        return username
 
 class UserProfileUpdateForm(forms.ModelForm):
-    # ... (unchanged) ...
     class Meta:
         model = UserProfile
         fields = ['name']
@@ -96,7 +117,6 @@ class UserProfileUpdateForm(forms.ModelForm):
 
 
 class ItemForm(forms.ModelForm):
-    # Use the new custom MultipleFileField for the item images
     item_image = MultipleFileField(
         required=False,
         label="Upload Image(s)"

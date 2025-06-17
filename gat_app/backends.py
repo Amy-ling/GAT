@@ -1,27 +1,39 @@
-# gat_app/backends.py
-
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, LogBook
 
 class PhoneBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         """
-        Overrides the default authenticate method to allow login with a phone number.
+        Overrides the default authenticate method to allow login with a phone number
+        and logs login failures.
         """
         try:
-            # Find a user profile with the provided phone number.
-            # The 'username' argument here is what the user enters in the form's main field.
+            # 透過電話號碼尋找用戶設定檔
             profile = UserProfile.objects.get(phone=username)
-
-            # Get the actual User object associated with this profile.
             user = profile.user
 
-            # Check if the provided password is correct for this user.
+            # 檢查密碼是否正確
             if user.check_password(password):
-                return user # Return the user object if authentication is successful.
-        except:
-            # If no profile is found with that phone number, do nothing and let other backends try.
+                # 密碼正確，認證成功
+                return user
+            else:
+                # 用戶存在，但密碼錯誤
+                LogBook.objects.create(
+                    log_action='LOGIN',
+                    log_result='FAILURE',
+                    log_user=user,
+                    log_details=f"Incorrect password for phone: {username}"
+                )
+                return None
+        except UserProfile.DoesNotExist:
+            # 找不到該電話號碼對應的用戶
+            LogBook.objects.create(
+                log_action='LOGIN',
+                log_result='FAILURE',
+                log_user=None, # 沒有對應的用戶
+                log_details=f"User not found with phone: {username}"
+            )
             return None
 
     def get_user(self, user_id):
