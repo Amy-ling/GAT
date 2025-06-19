@@ -1,3 +1,5 @@
+# backends.py (修正後)
+
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from .models import UserProfile, LogBook
@@ -22,7 +24,7 @@ class PhoneBackend(ModelBackend):
                 LogBook.objects.create(
                     log_action='LOGIN',
                     log_result='FAILURE',
-                    log_user=user,
+                    log_user_id=user.id,  # 【關鍵修改】使用 user.id 而不是 user
                     log_details=f"Incorrect password for phone: {username}"
                 )
                 return None
@@ -31,7 +33,7 @@ class PhoneBackend(ModelBackend):
             LogBook.objects.create(
                 log_action='LOGIN',
                 log_result='FAILURE',
-                log_user=None, # 沒有對應的用戶
+                log_user=None, # 沒有對應的用戶，這裡維持 None 是正確的
                 log_details=f"User not found with phone: {username}"
             )
             return None

@@ -1,7 +1,5 @@
-from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from .forms import UserRegisterForm, UserProfileUpdateForm, UserLoginForm, ItemForm
 from django.contrib.auth.models import User
@@ -40,7 +38,7 @@ def register_view(request):
 @login_required
 def gat_portal(request):
     uid = request.user.id
-    up = UserProfile.objects.get(id=uid)
+    up = request.user.profile
     request.session['uid'] = uid
     request.session['uname'] = up.name
     #save to logbook
@@ -228,39 +226,38 @@ def confirm_take_item_view(request, pk):
 ##############################################
 #block of system admin functions
 ##############################################
+# views.py
+
+# views.py
+
 @login_required
 def sysadmin_log_list(request):
     context = {}
+    user_phone = request.POST.get('user_phone', '').strip()
 
-    if request.method == 'POST':
-        # 處理電話號碼搜尋功能
-        search_phone = request.POST.get('user_phone', '').strip()
+    # 基礎查詢優化：一次性獲取 LogBook 及其關聯的 User 和 UserProfile
+    base_query = LogBook.objects.select_related('log_user__profile')
 
-        if not search_phone:
-            # 如果搜尋框是空的，就顯示所有日誌
-            logs = LogBook.objects.all().order_by('-log_date')
-            context['logs'] = logs
-        else:
-            try:
-                profile = UserProfile.objects.get(phone=search_phone)
-                logs = LogBook.objects.filter(log_user_id=profile.user.id).order_by('-log_date')
+    if request.method == 'POST' and user_phone:
+        # --- 處理電話號碼搜尋 ---
+        # 篩選出符合電話號碼的使用者的日誌
+        logs_query = base_query.filter(log_user__profile__phone=user_phone)
 
-                context = {
-                    'logs': logs,
-                    'user_name': profile.name,
-                    'user_phone': profile.phone,
-                    'is_filtered': True,  # 告訴範本現在是篩選模式
-                }
-            except UserProfile.DoesNotExist:
-                messages.error(request, f"User with phone number '{search_phone}' not found.")
-                # 如果找不到用戶，就再次顯示所有日誌
-                logs = LogBook.objects.all().order_by('-log_date')
-                context['logs'] = logs
+        if not logs_query.exists():
+            messages.error(request, f"User with phone number '{user_phone}' not found or has no logs.")
 
+        context = {
+            'logs': logs_query.order_by('-log_date'),
+            'searched_phone': user_phone,  # 將搜尋的號碼傳給模板，以便保留在輸入框中
+            'is_filtered': True,
+        }
     else:
-        # 處理 GET 請求 (也就是第一次載入頁面時)，預設顯示所有日誌
-        logs = LogBook.objects.all().order_by('-log_date')
-        context['logs'] = logs
+        # --- 顯示所有日誌 ---
+        context = {
+            'logs': base_query.all().order_by('-log_date'),
+            'searched_phone': '',
+            'is_filtered': False,
+        }
 
     return render(request, "gat_app/sysadmin_log_list.html", context)
 

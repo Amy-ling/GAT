@@ -1,75 +1,66 @@
 {% extends "base_admin.html" %}
-{% load crispy_forms_tags %}
 
-{% block title %}System Log History - {{ block.super }}{% endblock %}
+{% load static %}
 
-{% block content %}
-<div class="container mt-4">
+{% block body_content %}
 
-    {% if is_filtered %}
-        <h2>Log History for: {{ user_name }} ({{ user_phone }})</h2>
-    {% else %}
-        <h2>All System Logs</h2>
-    {% endif %}
+    <h2>Log Book History</h2>
+    <br/>
 
-    <p>View all system activities, including user registrations, logins (successful and failed), and item interactions.</p>
+    <div class="container w-60" style="min-width:300px; max-width: 550px;">
+        {# 【修正】action 改為指向正確的 URL name，更具彈性 #}
+        <form action="{% url 'sysadmin_log_list' %}" method="POST">
+            {% csrf_token %}
 
-    <div class="card my-4">
-        <div class="card-body">
-            <h5 class="card-title">Search Logs by Phone</h5>
-            <form method="POST" class="form-inline">
-                {% csrf_token %}
-                <div class="form-group mr-2">
-                    <input type="text" name="user_phone" class="form-control" placeholder="Enter 8-digit phone..." value="{{ user_phone|default:'' }}">
-                </div>
-                <button type="submit" class="btn btn-primary">Search</button>
-                {% if is_filtered %}
-                    <a href="{% url 'sysadmin_log_list' %}" class="btn btn-secondary ml-2">Show All Logs</a>
-                {% endif %}
-            </form>
-        </div>
+            <div class="mb-3">
+                <label for="user_phone" class="form-label">Register Phone Number:</label>
+                {# 【修正】用 searched_phone 來保留上次的搜尋紀錄 #}
+                <input type="number" class="form-control" min="20000000" max="99999999" name="user_phone" id="user_phone" value="{{ searched_phone|default:'' }}" aria-describedby="user_phoneHelp">
+                <div id="user_phoneHelp" class="form-text">Please input registered phone number (** 8 digit)</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-bordered">
+    <div class="container w-85 p-2" style="min-width:500px; max-width: 800px;">
+        <table class="table table-striped">
             <thead class="thead-dark">
-                <tr>
-                    <th scope="col">Date & Time</th>
-                    <th scope="col">User</th>
-                    <th scope="col">Action</th>
-                    <th scope="col">Result</th>
-                    <th scope="col">Details</th>
-                </tr>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">User Name</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Log Action</th>
+                <th scope="col">Log Result</th>
+                <th scope="col">Log Time</th>
+                <th scope="col">Action</th>
+            </tr>
             </thead>
             <tbody>
-                {% for log in logs %}
+            <br/>
+            <p>Record found: {{ logs.count }}</p>
+
+            {% for log_rec in logs %}
                 <tr>
-                    <td>{{ log.log_date|date:"Y-m-d H:i:s" }}</td>
-                    <td>
-                        {% if log.log_user %}
-                            {{ log.log_user.profile.name }} ({{ log.log_user.profile.phone }})
-                        {% else %}
-                            <span class="text-muted">N/A (System Event)</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ log.log_action }}</td>
-                    <td>
-                        {% if log.log_result == 'SUCCESS' %}
-                            <span class="badge badge-success">{{ log.log_result }}</span>
-                        {% else %}
-                            <span class="badge badge-danger">{{ log.log_result }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ log.log_details|default:"-" }}</td>
+                    <td>{{ log_rec.id }}</td>
+                    {# 【核心修正】從 log_rec 物件中取得關聯的使用者資料 #}
+                    {# 使用 default filter 來處理 log_user 可能為空的情況 #}
+                    <td>{{ log_rec.log_user.profile.name|default:"N/A" }}</td>
+                    <td>{{ log_rec.log_user.profile.phone|default:"N/A" }}</td>
+                    <td>{{ log_rec.log_action }}</td>
+                    <td>{{ log_rec.log_result }}</td>
+                    <td>{{ log_rec.log_date }}</td>
+                    <td><a class="btn btn-primary" href="{% url 'systemadmin_log_delete' log_rec.id %}" onclick="return confirm('Are you sure?')">Delete</a></td>
                 </tr>
-                {% empty %}
+            {% empty %}
+                {# 新增：當沒有任何日誌時顯示的訊息 #}
                 <tr>
-                    <td colspan="5" class="text-center">No log records found.</td>
+                    <td colspan="7" class="text-center">No log records found.</td>
                 </tr>
-                {% endfor %}
+            {% endfor %}
+
             </tbody>
         </table>
     </div>
 
-</div>
 {% endblock %}
