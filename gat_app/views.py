@@ -35,6 +35,14 @@ def register_view(request):
 ##############################################
 # set sessions and check if system admin
 ##############################################
+# views.py
+
+from django.contrib.auth.models import User
+from .models import LogBook, UserProfile, Item, ItemImage, ItemTaken
+
+
+# ... 其他 import ...
+
 @login_required
 def gat_portal(request):
     uid = request.user.id
@@ -46,10 +54,45 @@ def gat_portal(request):
     #check user profile if is admin
     if up.is_admin:
         request.session['is_admin'] = True
-        return render(request, "gat_app/sysadmin_main.html")
+
+        # --- 為管理員儀表板準備數據 ---
+        total_users = UserProfile.objects.count()
+        total_items = Item.objects.count()
+        available_items = Item.objects.filter(item_state='available').count()
+        taken_items = Item.objects.filter(item_state='taken').count()
+        recent_logs = LogBook.objects.select_related('log_user__profile').order_by('-log_date')[:10]
+        recent_users = UserProfile.objects.select_related('user').order_by('-user__date_joined')[:5]
+
+        context = {
+            'total_users': total_users,
+            'total_items': total_items,
+            'available_items': available_items,
+            'taken_items': taken_items,
+            'recent_logs': recent_logs,
+            'recent_users': recent_users,
+        }
+        return render(request, "gat_app/sysadmin_main.html", context)
     else:
+        # --- 為普通使用者儀表板準備數據 ---
         request.session['is_admin'] = False
-        return render(request, "gat_app/user_main.html")
+
+        # 1. 獲取最新的 6 個可領取物品 (排除使用者自己的物品)
+        latest_items = Item.objects.filter(
+            item_state='available'
+        ).exclude(
+            give_user=request.user
+        ).select_related('give_user__profile').prefetch_related('itemimage_set').order_by('-give_date')[:6]
+
+        # 2. 獲取使用者的個人統計數據
+        my_available_items_count = Item.objects.filter(give_user=request.user, item_state='available').count()
+        my_taken_items_count = ItemTaken.objects.filter(take_user=request.user).count()
+
+        context = {
+            'latest_items': latest_items,
+            'my_available_items_count': my_available_items_count,
+            'my_taken_items_count': my_taken_items_count,
+        }
+        return render(request, "gat_app/user_main.html", context)
 
 
 ##############################################

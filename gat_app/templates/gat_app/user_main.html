@@ -1,9 +1,64 @@
 {% extends "base_user.html" %}
-
 {% load static %}
 
 {% block body_content %}
 
-    <h2>Give & Take - User</h2>
+<div class="container mt-4">
 
+    <div class="p-5 mb-4 bg-light rounded-3 text-center">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Welcome back, {{ request.session.uname }}!</h1>
+            <p class="fs-4">Ready to give your items a new life or find something you need?</p>
+            <p class="text-muted">
+                You currently have <strong>{{ my_available_items_count }}</strong> items available for others and have taken <strong>{{ my_taken_items_count }}</strong> items so far. Keep it up!
+            </p>
+            <br>
+            <a class="btn btn-primary btn-lg" href="{% url 'give_item' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-box-arrow-up" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M3.5 10a.5.5 0 0 1-.5-.5v-8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 0 0 1h2A1.5 1.5 0 0 0 14 9.5v-8A1.5 1.5 0 0 0 12.5 0h-9A1.5 1.5 0 0 0 2 1.5v8A1.5 1.5 0 0 0 3.5 11h2a.5.5 0 0 0 0-1z"/>
+                    <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708z"/>
+                </svg>
+                Give an Item
+            </a>
+            <a class="btn btn-success btn-lg" href="{% url 'take_item' %}">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                </svg>
+                Take an Item
+            </a>
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h3 class="mb-4">Here's what's new for you to take...</h3>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for item in latest_items %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                {# 顯示第一張圖片，若無則顯示佔位圖片 #}
+                {% if item.itemimage_set.first.item_image.url %}
+                    <img src="{{ item.itemimage_set.first.item_image.url }}" class="card-img-top" alt="{{ item.item_name }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <img src="https://placehold.co/600x400/EFEFEF/AAAAAA?text=No+Image" class="card-img-top" alt="No image available" style="height: 200px; object-fit: cover;">
+                {% endif %}
+
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.item_name }}</h5>
+                    <p class="card-text text-muted">{{ item.description|truncatewords:15 }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">By: {{ item.give_user.profile.name }}</small>
+                    {# 根據 FR8，用戶可以領取物品 #}
+                    <a href="{% url 'confirm_take_item' item.id %}" class="btn btn-sm btn-outline-success">View & Take</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <div class="col-12">
+                <p class="text-center text-muted">Looks like there are no new items available right now. Why not be the first to give something?</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}
