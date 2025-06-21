@@ -55,19 +55,24 @@
         </div>
 
         <div class="tab-pane fade" id="given-history-panel" role="tabpanel" aria-labelledby="given-history-tab">
-            {% if given_and_taken_items %}
+
+             {% if given_and_taken_items %}
                  <div class="list-group">
-                    {% for item in given_and_taken_items %}
+                     {% for taken_record in given_and_taken_items %}
                          <div class="list-group-item">
-                            <h5 class="mb-1">{{ item.item_name }}</h5>
-                            <small>Status: <strong>{{ item.item_state }}</strong></small>
-                            <p class="mb-1">This item was taken by another user.</p>
+                             <h5 class="mb-1">{{ taken_record.item_id.item_name }}</h5>
+                             <small>Status: <strong>{{ taken_record.item_id.item_state }}</strong></small>
+                             <p class="mb-1">This item was taken by <strong>{{ taken_record.take_user.profile.name }}</strong>.</p>
+                             <p> Please contact the taker by phone number: <strong>{{ taken_record.take_user.profile.phone }}</strong>.</p>
                          </div>
-                    {% endfor %}
+                     {% endfor %}
                  </div>
-            {% else %}
-                <p>None of your items have been taken yet.</p>
-            {% endif %}
+             {% else %}
+                 <p>None of your items have been taken yet.</p>
+             {% endif %}
+
+         </div>
+
         </div>
 
         <div class="tab-pane fade" id="pickups-panel" role="tabpanel" aria-labelledby="pickups-tab">
@@ -81,7 +86,6 @@
                               {# --- THIS LINE IS NOW CORRECTED --- #}
                               <p> Please contact the giver by phone number: <strong>{{ taken_record.item_id.give_user.profile.phone }}</strong>.</p>
                             <small>Picked up on: {{ taken_record.take_date|date:"Y-m-d H:i" }}</small>
-
                          </div>
                     {% endfor %}
                  </div>

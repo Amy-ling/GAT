@@ -3,10 +3,12 @@
 {% block title %}Logged Out - {{ block.super }}{% endblock %}
 
 {% block body_content %}
-    <h2>You have been logged out.</h2>
-    <div style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;">
-        <small>
-            <a href="{% url 'login' %}">Log In Again</a>
-        </small>
+    <div class="container w-60" style="min-width:300px; max-width: 550px;">
+        <h2>You have been logged out.</h2>
+        <div style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;">
+            <small>
+                <a href="{% url 'login' %}">Log In Again</a>
+            </small>
+        </div>
     </div>
 {% endblock %}

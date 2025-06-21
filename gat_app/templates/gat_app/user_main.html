@@ -6,9 +6,9 @@
 <div class="container mt-4">
 
     <div class="p-5 mb-4 bg-light rounded-3 text-center">
-        <div class="container-fluid py-5">
-            <h1 class="display-5 fw-bold">Welcome back, {{ request.session.uname }}!</h1>
-            <p class="fs-4">Ready to give your items a new life or find something you need?</p>
+        <div class="container-fluid py-6">
+            <h1 class="display-6 fw-bold">Welcome back, {{ request.session.uname }}!</h1>
+            <p class="fs-5">Ready to give your items a new life, or find something you need?</p>
             <p class="text-muted">
                 You currently have <strong>{{ my_available_items_count }}</strong> items available for others and have taken <strong>{{ my_taken_items_count }}</strong> items so far. Keep it up!
             </p>
@@ -31,29 +31,27 @@
 
     <hr class="my-4">
 
-    <h3 class="mb-4">Here's what's new for you to take...</h3>
+    <h3 class="mb-4">Here're some new items for you to take...</h3>
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for item in latest_items %}
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                {# 顯示第一張圖片，若無則顯示佔位圖片 #}
-                {% if item.itemimage_set.first.item_image.url %}
-                    <img src="{{ item.itemimage_set.first.item_image.url }}" class="card-img-top" alt="{{ item.item_name }}" style="height: 200px; object-fit: cover;">
-                {% else %}
-                    <img src="https://placehold.co/600x400/EFEFEF/AAAAAA?text=No+Image" class="card-img-top" alt="No image available" style="height: 200px; object-fit: cover;">
-                {% endif %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    {% if item.itemimage_set.first.item_image.url %}
+                        <img src="{{ item.itemimage_set.first.item_image.url }}" class="card-img-top" alt="{{ item.item_name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <img src="/static/no-image.png" class="card-img-top" alt="No image available" style="height: 200px; object-fit: cover;">
+                    {% endif %}
 
-                <div class="card-body">
-                    <h5 class="card-title">{{ item.item_name }}</h5>
-                    <p class="card-text text-muted">{{ item.description|truncatewords:15 }}</p>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.item_name }}</h5>
+                        <p class="card-text text-muted">{{ item.description|truncatewords:15 }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
+                        <small class="text-muted">By: {{ item.give_user.profile.name }}</small>
+                        <a href="{% url 'confirm_take_item' item.id %}" class="btn btn-sm btn-outline-success">View & Take</a>
+                    </div>
                 </div>
-                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
-                    <small class="text-muted">By: {{ item.give_user.profile.name }}</small>
-                    {# 根據 FR8，用戶可以領取物品 #}
-                    <a href="{% url 'confirm_take_item' item.id %}" class="btn btn-sm btn-outline-success">View & Take</a>
-                </div>
-            </div>
-        </div>
+            </div>`
         {% empty %}
             <div class="col-12">
                 <p class="text-center text-muted">Looks like there are no new items available right now. Why not be the first to give something?</p>

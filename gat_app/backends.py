@@ -1,4 +1,4 @@
-# backends.py (修正後)
+# gat_app/backends.py
 
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
@@ -7,35 +7,29 @@ from .models import UserProfile, LogBook
 class PhoneBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         """
-        Overrides the default authenticate method to allow login with a phone number
-        and logs login failures.
+        Overrides the default authenticate method to allow login with a phone number.
         """
         try:
-            # 透過電話號碼尋找用戶設定檔
+            # Find a user profile with the provided phone number.
+            # The 'username' argument here is what the user enters in the form's main field.
             profile = UserProfile.objects.get(phone=username)
+
+            # Get the actual User object associated with this profile.
             user = profile.user
 
-            # 檢查密碼是否正確
+            # Check if the provided password is correct for this user.
             if user.check_password(password):
-                # 密碼正確，認證成功
-                return user
+                return user # Return the user object if authentication is successful.
             else:
-                # 用戶存在，但密碼錯誤
+                #User logon with incorrect password, save logbook
                 LogBook.objects.create(
-                    log_action='LOGIN',
+                    log_action='LOGIN: INCORRECT PWD',
                     log_result='FAILURE',
-                    log_user_id=user.id,  # 【關鍵修改】使用 user.id 而不是 user
-                    log_details=f"Incorrect password for phone: {username}"
+                    log_user_id=user.id,
                 )
                 return None
-        except UserProfile.DoesNotExist:
-            # 找不到該電話號碼對應的用戶
-            LogBook.objects.create(
-                log_action='LOGIN',
-                log_result='FAILURE',
-                log_user=None, # 沒有對應的用戶，這裡維持 None 是正確的
-                log_details=f"User not found with phone: {username}"
-            )
+        except:
+            # If no profile is found with that phone number, do nothing and let other backends try.
             return None
 
     def get_user(self, user_id):

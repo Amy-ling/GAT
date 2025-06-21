@@ -3,38 +3,21 @@
 {% load static %}
 
 {% block body_content %}
-    <script>
-        function validateForm() {
-            var x = document.forms["resetForm"]["user_phone"].value;
-            var y = document.forms["resetForm"]["new_pwd"].value;
-            if (x == "" || y == "" | x == null | y == "") {
-                alert("Please fill in all fields of data");
-                return false;
-            }
-        }
-    </script>
-    {% if messages %}
-         {% for message in messages %}
-             {% if message.tags %}
-                 <script>alert("{{ message }}");</script>
-             {% endif %}
-         {% endfor %}
-     {% endif %}
 
     <h2>Reset User Password</h2>
     <br/>
-    <div class="container w-50" style="min-width:300px; max-width: 550px;">
-        <form name="resetForm" action="/reset_pwd/" onsubmit="return validateForm()" method="POST">
+    <div class="container w-60" style="min-width:300px; max-width: 550px;">
+        <form name="resetForm" action="/sysadmin/reset_pwd/" method="POST">
             {% csrf_token %}
 
             <div class="mb-3">
-                <label for="user_phone" class="form-label">Register Phone Number:</label>
-                <input type="number" class="form-control" min="20000000", max="99999999", name="user_phone" id="user_phone" aria-describedby="user_phoneHelp">
-                <div id="user_phoneHelp" class="form-text">Please input registered phone number (** 8 digit)</div>
+                <label for="user_phone" class="form-label">User Register Phone Number:</label>
+                <input type="text" class="form-control" required pattern="\d{8}" title="input phone number must be 8-digit" name="user_phone" id="user_phone" aria-describedby="user_phoneHelp">
+                <div id="user_phoneHelp" class="form-text">Please input user registered phone number (** 8 digit)</div>
             </div>
             <div class="mb-3">
                 <label for="new_pwd" class="form-label">New Password:</label>
-                <input type="password" class="form-control" minlength="3" maxlength="10" name="new_pwd" id="new_pwd">
+                <input type="password" class="form-control" required minlength="3" maxlength="10" name="new_pwd" id="new_pwd">
             </div>
 
             <button type="submit" class="btn btn-primary">Submit</button>

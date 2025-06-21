@@ -8,7 +8,6 @@ from .models import UserProfile, Item
 import random
 from django.contrib.auth.forms import AuthenticationForm
 
-
 class MultipleFileInput(forms.ClearableFileInput):
     """
     A custom widget that allows for the selection of multiple files.
@@ -34,9 +33,12 @@ class MultipleFileField(forms.FileField):
 
 
 class UserRegisterForm(forms.Form):
-    phone = forms.IntegerField(
+    phone = forms.CharField(
         label='Phone Number',
-        help_text='Your 8-digit phone number. This will be your login ID in the future.'
+        help_text='Your 8-digit phone number. This will be your login ID in the future.',
+        min_length=8,
+        max_length=8,
+        widget=forms.TextInput(attrs={'type': 'number', 'placeholder': '8-digit phone number'}),
     )
     password = forms.CharField(
         label='Password',
@@ -50,9 +52,14 @@ class UserRegisterForm(forms.Form):
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone')
+
+        if not phone.isdigit():
+            raise forms.ValidationError("Phone number must be digits")
+
         if UserProfile.objects.filter(phone=phone).exists():
-            raise forms.ValidationError("A user with this phone number already exists.")
-        return phone
+            raise forms.ValidationError("Phone number has been registered")
+
+        return int(phone)
 
     def clean_password2(self):
         cd = self.cleaned_data
@@ -115,18 +122,23 @@ class UserProfileUpdateForm(forms.ModelForm):
         self.fields['name'].label = "Display Name"
         self.fields['name'].help_text = "This name will be visible to other users."
 
-
 class ItemForm(forms.ModelForm):
     item_image = MultipleFileField(
         required=False,
-        label="Upload Image(s)"
+        label="Upload Image(s) (Max 6)"
     )
 
     class Meta:
         model = Item
-        fields = ['item_name', 'item_type', 'description']
+        fields = ['item_name', 'item_type', 'description', 'item_image']
         labels = {
             'item_name': 'Item Name',
             'item_type': 'Item Type',
             'description': 'Description',
         }
+
+    def clean_item_image(self):
+        images = self.files.getlist('item_image')
+        if len(images) > 6:
+            raise forms.ValidationError("You can only upload up to 6 images.")
+        return images
