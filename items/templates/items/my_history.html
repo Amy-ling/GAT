@@ -1,0 +1,84 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block body_content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">My History & Activity</h2>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills justify-content-center mb-4" id="myHistoryTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="available-tab" data-bs-toggle="tab" data-bs-target="#available-panel" type="button" role="tab" aria-controls="available-panel" aria-selected="true">My Available Items</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="given-history-tab" data-bs-toggle="tab" data-bs-target="#given-history-panel" type="button" role="tab" aria-controls="given-history-panel" aria-selected="false">My Given Items</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pickups-tab" data-bs-toggle="tab" data-bs-target="#pickups-panel" type="button" role="tab" aria-controls="pickups-panel" aria-selected="false">My Pickups</button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="myHistoryTabContent">
+        <!-- My Available Items -->
+        <div class="tab-pane fade show active" id="available-panel" role="tabpanel" aria-labelledby="available-tab">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for item in my_given_items_available %}
+                    {% include 'items/_item_card.html' with item=item guest=False %}
+                {% empty %}
+                    <div class="col-12">
+                        <div class="text-center p-5 border rounded bg-light">
+                            <h4>You have no available items.</h4>
+                            <p class="text-muted">Why not be the first to <a href="{% url 'items:give_item' %}">give something</a>?</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- My Given Items -->
+        <div class="tab-pane fade" id="given-history-panel" role="tabpanel" aria-labelledby="given-history-tab">
+            <div class="list-group">
+                {% for taken_record in my_given_items_taken %}
+                    {% include 'items/_taken_item_card.html' with taken_record=taken_record given=True %}
+                {% empty %}
+                    <div class="text-center p-5 border rounded bg-light">
+                        <h4>None of your items have been taken yet.</h4>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- My Pickups -->
+        <div class="tab-pane fade" id="pickups-panel" role="tabpanel" aria-labelledby="pickups-tab">
+            <div class="list-group">
+                {% for taken_record in my_taken_items %}
+                    {% include 'items/_taken_item_card.html' with taken_record=taken_record given=False %}
+                {% empty %}
+                    <div class="text-center p-5 border rounded bg-light">
+                        <h4>You have not picked up any items yet.</h4>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Check for a hash in the URL
+    if (window.location.hash) {
+        // Find the tab button that corresponds to the hash
+        const tabButton = document.querySelector(`button[data-bs-target="${window.location.hash}"]`);
+        if (tabButton) {
+            // Create a Bootstrap Tab instance and show it
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+        }
+    }
+});
+</script>
+{% endblock extra_js %}
+

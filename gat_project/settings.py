@@ -40,9 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'gat_app.apps.GatAppConfig',
     'crispy_forms',
     'crispy_bootstrap5',
+    'items.apps.ItemsConfig',
+    'users.apps.UsersConfig',
+    'logs.apps.LogsConfig',
+    'django.contrib.humanize',
+
 ]
 
 MIDDLEWARE = [
@@ -136,11 +140,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-LOGIN_URL = 'gat_index'
-LOGIN_REDIRECT_URL = 'gat_portal'
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'users:gat_portal'
 LOGOUT_REDIRECT_URL = 'gat_index'
 
-AUTHENTICATION_BACKENDS = [
-    'gat_app.backends.PhoneBackend',  # Our custom phone number backend
-    'django.contrib.auth.backends.ModelBackend',  # The default username backend
-]
+# AUTHENTICATION_BACKENDS = [
+#     'gat_app.backends.PhoneBackend',  # Our custom phone number backend
+#     'django.contrib.auth.backends.ModelBackend',  # The default username backend
+# ]

@@ -1,0 +1,115 @@
+{% load static %}
+{% load humanize %}
+
+<div class="col">
+    <div class="card h-100">
+        <a href="#" data-bs-toggle="modal" data-bs-target="#imageModal-{{ item.id }}" class="text-decoration-none h-100 d-block">
+            <div class="card-img-container">
+                {% with first_image=item.itemimage_set.first %}
+                    {% if first_image %}
+                        <img src="{{ first_image.item_image.url }}" class="card-img-top" alt="{{ item.item_name }}">
+                    {% else %}
+                        <img src="{% static 'no-image.png' %}" class="card-img-top" alt="No image available">
+                    {% endif %}
+                {% endwith %}
+
+                {% if item.itemimage_set.all|length > 1 %}
+                    <div class="more-images-indicator">
+                        <i class="bi bi-images"></i>
+                        <span>{{ item.itemimage_set.all|length }} Photos</span>
+                    </div>
+                {% endif %}
+            </div>
+        </a>
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title">{{ item.item_name }}</h5>
+            <p class="card-text text-muted flex-grow-1">{{ item.description|truncatewords:15 }}</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+                <span class="badge bg-primary">{{ item.get_item_type_display }}</span>
+                <small class="text-muted">Posted {{ item.give_date|naturaltime }}</small>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-grid gap-2">
+                {% if guest %}
+                    <a href="{% url 'users:login' %}" class="btn btn-primary">Login to View</a>
+                {% else %}
+                    {% if item.give_user == request.user %}
+                        <div class="btn-group d-flex">
+                            <a href="{% url 'items:edit_item' item.pk %}" class="btn btn-outline-secondary w-100">Edit</a>
+                            <a href="{% url 'items:delete_item' item.pk %}" class="btn btn-outline-danger w-100">Take Back</a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'items:take_item' item.id %}" class="btn btn-success">View & Take</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal-{{ item.id }}" tabindex="-1" aria-labelledby="imageModalLabel-{{ item.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel-{{ item.id }}">{{ item.item_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-carousel-{{ item.id }}" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for image in item.itemimage_set.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="modal-image-container">
+                                    <img src="{{ image.item_image.url }}" class="modal-image" alt="{{ item.item_name }}">
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="carousel-item active">
+                                <div class="modal-image-container">
+                                    <img src="{% static 'no-image.png' %}" class="modal-image" alt="No image available">
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if item.itemimage_set.all|length > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#modal-carousel-{{ item.id }}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#modal-carousel-{{ item.id }}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="mt-3">
+                    <p class="lead">{{ item.description }}</p>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Category:</strong> <span class="badge bg-primary">{{ item.get_item_type_display }}</span>
+                        </div>
+                        <div>
+                            <strong>Giver:</strong> {{ item.give_user.profile.name }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="d-grid col-12">
+                    {% if guest %}
+                        <a href="{% url 'users:login' %}" class="btn btn-primary btn-lg">Login to Take</a>
+                    {% else %}
+                        {% if item.give_user == request.user %}
+                            <a href="#" class="btn btn-secondary btn-lg disabled" aria-disabled="true">This is your item</a>
+                        {% else %}
+                            <a href="{% url 'items:take_item' item.id %}" class="btn btn-success btn-lg">Take This Item</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_content %}
+    <h2 class="text-center">Welcome to Give & Take</h2>
+    <div id="gat_slide" class="carousel slide" data-bs-ride="carousel" align="center">
+        <div class="carousel-inner">
+            <div class="carousel-item active" data-bs-interval="2000">
+                <img src="{% static 'slide-1.jpg' %}" class="d-block w-100" alt="...">
+            </div>
+            <div class="carousel-item" data-bs-interval="2500">
+                <img src="{% static 'slide-2.jpg' %}" class="d-block w-100" alt="...">
+            </div>
+            <div class="carousel-item" data-bs-interval="3000">
+                <img src="{% static 'slide-3.jpg' %}" class="d-block w-100" alt="...">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#gat_slide" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#gat_slide" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+    <br/>
+    <h3 class="text-center">心愛舊物，重生之美</h3>
+{% endblock %}
