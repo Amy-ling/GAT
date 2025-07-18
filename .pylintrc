@@ -1,0 +1,4 @@
+[MASTER]
+load-plugins=pylint_django
+[pylint_django]
+django_settings_module=gat_project.settings

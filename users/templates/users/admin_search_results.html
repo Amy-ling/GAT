@@ -1,0 +1,46 @@
+{% extends "base_admin.html" %}
+
+{% block body_content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h4 class="m-0 font-weight-bold text-primary">Search Results for "{{ query }}"</h4>
+        </div>
+        <div class="card-body">
+            {% if results %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Display Name</th>
+                                <th>Phone</th>
+                                <th>Joined Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for profile in results %}
+                            <tr>
+                                <td>{{ profile.name }}</td>
+                                <td>{{ profile.phone }}</td>
+                                <td>{{ profile.user.date_joined|date:"Y-m-d" }}</td>
+                                <td>
+                                    <a href="{% url 'users:systemadmin_reset_pwd' %}?phone={{ profile.phone }}" class="btn btn-sm btn-outline-warning" title="Reset Password">
+                                        <i class="bi bi-key-fill"></i>
+                                    </a>
+                                    <a href="{% url 'logs:user_log_list' profile.user.id %}" class="btn btn-sm btn-outline-info" title="View Logs">
+                                        <i class="bi bi-card-list"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No users found matching your search criteria.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

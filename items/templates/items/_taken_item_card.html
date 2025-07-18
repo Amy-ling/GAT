@@ -1,0 +1,21 @@
+{% load static %}
+<div class="list-group-item d-flex align-items-center">
+    <div class="flex-shrink-0 me-3">
+        {% if taken_record.item_id.itemimage_set.first.item_image.url %}
+            <img src="{{ taken_record.item_id.itemimage_set.first.item_image.url }}" class="img-fluid rounded" alt="{{ taken_record.item_id.item_name }}" style="width: 100px; height: 100px; object-fit: cover;">
+        {% else %}
+            <img src="{% static 'no-image.png' %}" class="img-fluid rounded" alt="No image available" style="width: 100px; height: 100px; object-fit: cover;">
+        {% endif %}
+    </div>
+    <div class="flex-grow-1">
+        <h5 class="mb-1">{{ taken_record.item_id.item_name }}</h5>
+        {% if given %}
+            <p class="mb-1">This item was taken by <strong>{{ taken_record.take_user.profile.name }}</strong>.</p>
+            <p>Please contact the taker by phone number: <strong>{{ taken_record.take_user.profile.phone }}</strong>.</p>
+        {% else %}
+            <p class="mb-1">You picked this up from user: <strong>{{ taken_record.item_id.give_user.profile.name }}</strong>.</p>
+            <p>Please contact the giver by phone number: <strong>{{ taken_record.item_id.give_user.profile.phone }}</strong>.</p>
+        {% endif %}
+        <small class="text-muted">Taken on: {{ taken_record.take_date|date:"Y-m-d H:i" }}</small>
+    </div>
+</div>

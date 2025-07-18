@@ -1,0 +1,20 @@
+{% for item in items %}
+    {% include 'items/_item_card.html' with item=item guest=guest %}
+{% empty %}
+    <div class="col-12">
+        <div class="text-center p-5 border rounded bg-light">
+            <h4>No items found</h4>
+            <p class="text-muted">
+                {% if query %}
+                    Your search for "{{ query }}" did not match any items.
+                {% elif selected_category %}
+                    There are no items in this category yet.
+                {% else %}
+                    Looks like there are no new items available right now.
+                {% endif %}
+                <br>
+                Why not be the first to <a href="{% url 'items:give_item' %}">give something</a>?
+            </p>
+        </div>
+    </div>
+{% endfor %}

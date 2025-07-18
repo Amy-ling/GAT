@@ -1,0 +1,34 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block body_content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Confirm Take Item</h2>
+                </div>
+                <div class="card-body text-center">
+                    {% if item.itemimage_set.first.item_image.url %}
+                        <img src="{{ item.itemimage_set.first.item_image.url }}" class="img-fluid rounded mb-3" alt="{{ item.item_name }}" style="max-height: 300px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'no-image.png' %}" class="img-fluid rounded mb-3" alt="No image available" style="max-height: 300px; object-fit: cover;">
+                    {% endif %}
+                    <p>Are you sure you want to take the following item?</p>
+                    <h4>{{ item.item_name }}</h4>
+                    <p><em>Given by: {{ item.give_user.profile.name }}</em></p>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group mt-3">
+                            <button class="btn btn-success" type="submit">Yes, Take It</button>
+                            <a href="{% url 'items:user_main' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

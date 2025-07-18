@@ -1,0 +1,84 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block body_content %}
+<div id="main-content">
+<div class="container mt-4">
+    <h3 class="mb-4">Here're some new items for you to take...</h3>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-md-8 offset-md-2">
+            <form method="get" action="{{ request.path }}" class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search for items..." name="q" value="{{ query|default:'' }}">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Filter Buttons -->
+    <div class="text-center mb-4">
+        <a href="{{ request.path }}{% if query %}?q={{ query }}{% endif %}" class="btn btn-sm category-filter-btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+        {% for value, display in categories %}
+            <a href="{{ request.path }}?category={{ value }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-sm category-filter-btn {% if selected_category == value %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ display }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="item-list">
+        {% include 'items/_item_list.html' %}
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const categoryButtons = document.querySelectorAll('.category-filter-btn');
+    const itemListContainer = document.getElementById('item-list');
+    const searchForm = document.querySelector('form');
+    const searchInput = document.querySelector('input[name="q"]');
+
+    function fetchItems(url) {
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            itemListContainer.innerHTML = html;
+        })
+        .catch(error => console.error('Error fetching items:', error));
+    }
+
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const url = this.href;
+            fetchItems(url);
+
+            // Update active button state
+            categoryButtons.forEach(btn => btn.classList.remove('btn-primary'));
+            categoryButtons.forEach(btn => btn.classList.add('btn-outline-primary'));
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+        });
+    });
+
+    searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const query = searchInput.value;
+        const activeCategory = document.querySelector('.category-filter-btn.btn-primary');
+        let url = activeCategory.href;
+
+        if (url.includes('?')) {
+            url = `${url}&q=${query}`;
+        } else {
+            url = `${url}?q=${query}`;
+        }
+        
+        fetchItems(url);
+    });
+});
+</script>
+{% endblock %}
+

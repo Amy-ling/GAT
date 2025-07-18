@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_content %}
+    <h2 class="text-center">Welcome to Give & Take</h2>
+    <div id="gat_slide" class="carousel slide" data-bs-ride="carousel" align="center">
+        <div class="carousel-inner">
+            <div class="carousel-item active" data-bs-interval="2000">
+                <img src="{% static 'slide-1.jpg' %}" class="d-block w-100" alt="...">
+            </div>
+            <div class="carousel-item" data-bs-interval="2500">
+                <img src="{% static 'slide-2.jpg' %}" class="d-block w-100" alt="...">
+            </div>
+            <div class="carousel-item" data-bs-interval="3000">
+                <img src="{% static 'slide-3.jpg' %}" class="d-block w-100" alt="...">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#gat_slide" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#gat_slide" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+    <br/>
+    <h3 class="text-center">心愛舊物，重生之美</h3>
+
+    <div class="container mt-4">
+        <h3 class="mb-4">Here're some new items for you to take...</h3>
+
+        <!-- Search Form -->
+        <div class="row mb-4">
+            <div class="col-md-8 offset-md-2">
+                <form method="get" action="{{ request.path }}" class="d-flex">
+                    <input class="form-control me-2" type="search" placeholder="Search for items..." name="q" value="{{ query|default:'' }}">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Category Filter Buttons -->
+        <div class="text-center mb-4">
+            <a href="{{ request.path }}{% if query %}?q={{ query }}{% endif %}" class="btn btn-sm category-filter-btn {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+            {% for value, display in categories %}
+                <a href="{{ request.path }}?category={{ value }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-sm category-filter-btn {% if selected_category == value %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ display }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="item-list">
+            {% include 'items/_item_list.html' %}
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const categoryButtons = document.querySelectorAll('.category-filter-btn');
+    const itemListContainer = document.getElementById('item-list');
+    const searchForm = document.querySelector('form');
+    const searchInput = document.querySelector('input[name="q"]');
+
+    function fetchItems(url) {
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            itemListContainer.innerHTML = html;
+        })
+        .catch(error => console.error('Error fetching items:', error));
+    }
+
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const url = this.href;
+            fetchItems(url);
+
+            // Update active button state
+            categoryButtons.forEach(btn => btn.classList.remove('btn-primary'));
+            categoryButtons.forEach(btn => btn.classList.add('btn-outline-primary'));
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+        });
+    });
+
+    searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const query = searchInput.value;
+        const activeCategory = document.querySelector('.category-filter-btn.btn-primary');
+        let url = activeCategory.href;
+
+        if (url.includes('?')) {
+            url = `${url}&q=${query}`;
+        } else {
+            url = `${url}?q=${query}`;
+        }
+        
+        fetchItems(url);
+    });
+});
+</script>
+{% endblock %}

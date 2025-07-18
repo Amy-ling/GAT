@@ -18,9 +18,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from users import views as user_views # Import user views
+
 urlpatterns = [
-    path('', include('gat_app.urls')),
     path('admin/', admin.site.urls),
+    path('users/', include('users.urls', namespace='users')),
+    path('items/', include('items.urls', namespace='items')),
+    path('logs/', include('logs.urls', namespace='logs')),
+    path('', user_views.gat_index, name='gat_index'), # Set root path to gat_index
 ]
 
 if settings.DEBUG:

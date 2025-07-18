@@ -1,0 +1,50 @@
+{% extends "base_admin.html" %}
+
+{% block body_content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h4 class="m-0 font-weight-bold text-primary">Activity Log for {{ target_user_name }}</h4>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'logs:sysadmin_log_list' %}" class="btn btn-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Full Log
+            </a>
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Result</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.log_date|date:"Y-m-d H:i:s" }}</td>
+                            <td>{{ log.log_action }}</td>
+                            <td>
+                                {% if log.log_result|upper == 'SUCCESS' %}
+                                    <span class="badge bg-success">Success</span>
+                                {% elif log.log_result|upper == 'FAILURE' %}
+                                    <span class="badge bg-danger">Failure</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ log.log_result }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log.log_details|default:"" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No logs found for this user.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
