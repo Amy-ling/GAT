@@ -136,6 +136,3 @@ The project is organized into three main Django apps:
 *   `/logs`: Provides a service for logging user actions and an interface for administrators to view those logs.
 *   `/templates`: Contains the base HTML templates and the main `index.html`.
 *   `/static`: Stores static assets like images and CSS.
-
----
-This `README.md` provides a good overview for new developers or users of the project.
